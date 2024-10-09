@@ -16,7 +16,7 @@ public final class ClearChatArgument extends ArgsConstructor {
     public ClearChatArgument(final GigaChat plugin, String name, String permission) {
         super(name, permission);
         this.messages = plugin.getMessages();
-        clearMessage = "\n ".repeat(100);
+        this.clearMessage = "\n ".repeat(100);
     }
 
     // todo проверить player != sender если отправитель игрок, ибо не факт, что жаба сама умеет кастовать
