@@ -260,4 +260,12 @@ public final class GigaChat extends JavaPlugin {
             default -> new VanillaColorizer();
         };
     }
+
+    public IColorizer getColorizerByVersion() {
+        final ServerInfo serverInfo = new ServerInfo();
+        final boolean is16OrAbove = serverInfo.getSubVersion(this) >= 16;
+        return is16OrAbove
+                ? new LegacyColorizer()
+                : new VanillaColorizer();
+    }
 }
