@@ -22,8 +22,11 @@ broadcast:
     &fОт: &6{player}
   # Указывать в миллисекундах
   cooldown: 30000
-  # Использовать ли формат <color></color>, для форматирования сообщения? (Не влияет на {message}!)
-  use-minimessages: false
+  # Форматирование текста.
+  # LEGACY - цвет через & и hex &#
+  # LEGACY_ADVANCED - улучшенный аналог legacy с поддержкой &## формата hex
+  # MINIMESSAGE - цвет через <цвет> (был добавлен в новых версиях (1.17+))
+  serializer: LEGACY
   hover:
     # Включение модуля
     enable: false

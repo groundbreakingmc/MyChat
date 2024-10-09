@@ -7,8 +7,11 @@
 #
 # Основные настройки
 settings:
-  # Использовать ли формат <color></color> для форматирования сообщений?
-  use-minimessage: false
+  # Форматирование текста.
+  # LEGACY - цвет через & и hex &#
+  # LEGACY_ADVANCED - улучшенный аналог legacy с поддержкой &## формата hex
+  # MINIMESSAGE - цвет через <цвет> (был добавлен в новых версиях (1.17+))
+  serializer: LEGACY
   # Не трогать.
   config-version: 1.0
 

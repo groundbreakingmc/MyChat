@@ -66,7 +66,7 @@ public final class Messages {
 
     public void setupMessages() {
         final FileConfiguration config = new ConfigLoader(plugin).loadAndGet("messages", 1.0);
-        final IColorizer colorizer = plugin.getColorizer(config, "settings.use-minimessage");
+        final IColorizer colorizer = plugin.getColorizer(config, "settings.serializer");
 
         setupMessages(config, colorizer);
         setupTimes(config);

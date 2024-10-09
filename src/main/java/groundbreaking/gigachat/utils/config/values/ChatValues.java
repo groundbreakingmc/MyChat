@@ -80,7 +80,7 @@ public final class ChatValues {
         if (settings != null) {
             final String priority = settings.getString("listener-priority").toUpperCase(Locale.ENGLISH);
             setupPriority(priority);
-            formatsColorizer = plugin.getColorizer(config, "settings.use-minimessage-for-formats");
+            formatsColorizer = plugin.getColorizer(config, "settings.serializer-for-formats");
         }
         else {
             plugin.getMyLogger().warning("Failed to load section \"settings\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");

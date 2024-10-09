@@ -57,7 +57,7 @@ public final class NewbieCommandsValues {
 
     public void setValues() {
         final FileConfiguration config = new ConfigLoader(plugin).loadAndGet("newbie-commands", 1.0);
-        final IColorizer colorizer = plugin.getColorizer(config, "settings.use-minimessage");
+        final IColorizer colorizer = plugin.getColorizer(config, "settings.serializer");
 
         setupSettings(config, colorizer);
     }

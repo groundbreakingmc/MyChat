@@ -52,7 +52,7 @@ public final class NewbieChatValues {
 
     public void setValues() {
         final FileConfiguration config = new ConfigLoader(plugin).loadAndGet("newbie-chat", 1.0);
-        final IColorizer colorizer = plugin.getColorizer(config, "settings.use-minimessage");
+        final IColorizer colorizer = plugin.getColorizer(config, "settings.serializer");
 
         setupSettings(config, colorizer);
     }
