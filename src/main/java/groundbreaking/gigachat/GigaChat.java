@@ -241,10 +241,10 @@ public final class GigaChat extends JavaPlugin {
 
     public void registerCommand(final String command, final List<String> aliases, final CommandExecutor commandExecutor, final TabCompleter tabCompleter) {
         try {
-            CommandMap commandMap = getServer().getCommandMap();
-            Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
+            final CommandMap commandMap = getServer().getCommandMap();
+            final Constructor<PluginCommand> constructor = PluginCommand.class.getDeclaredConstructor(String.class, Plugin.class);
             constructor.setAccessible(true);
-            PluginCommand pluginCommand = constructor.newInstance(command, this);
+            final PluginCommand pluginCommand = constructor.newInstance(command, this);
             pluginCommand.setAliases(aliases);
             pluginCommand.setExecutor(commandExecutor);
             pluginCommand.setTabCompleter(tabCompleter);
