@@ -24,13 +24,13 @@ public final class SetPmSoundArgument extends ArgsConstructor {
     public boolean execute(@NotNull CommandSender sender, @NotNull String[] args) {
 
         if (args.length != 3) {
-            sender.sendMessage(messages.getSetpmsoundUsageError());
+            sender.sendMessage(this.messages.getSetpmsoundUsageError());
             return true;
         }
 
         final Player target = Bukkit.getPlayer(args[1]);
         if (target == null) {
-            sender.sendMessage(messages.getPlayerNotFound());
+            sender.sendMessage(this.messages.getPlayerNotFound());
             return true;
         }
 
@@ -38,11 +38,15 @@ public final class SetPmSoundArgument extends ArgsConstructor {
             PmSounds.remove(target.getName());
             DatabaseQueries.removePlayerFromPmSounds(target.getName());
 
-            sender.sendMessage(messages.getTargetPmSoundRemoved()
-                    .replace("{player}", target.getName())
-            );
-            if (!messages.getPmSoundRemoved().isEmpty()) {
-                target.sendMessage(messages.getPmSoundRemoved());
+            final boolean messageForTargetIsEmpty = !this.messages.getPmSoundRemoved().isEmpty();
+            if (sender != target || messageForTargetIsEmpty) {
+                sender.sendMessage(this.messages.getTargetPmSoundRemoved()
+                        .replace("{player}", target.getName())
+                );
+            }
+
+            if (!messageForTargetIsEmpty) {
+                target.sendMessage(this.messages.getPmSoundRemoved());
             }
 
             return true;
@@ -52,19 +56,22 @@ public final class SetPmSoundArgument extends ArgsConstructor {
         try {
             sound = Sound.valueOf(args[2]);
         } catch (IllegalArgumentException ignore) {
-            sender.sendMessage(messages.getSoundNotFound());
+            sender.sendMessage(this.messages.getSoundNotFound());
             return true;
         }
 
         PmSounds.setSound(target.getName(), sound.name());
 
-        sender.sendMessage(messages.getTargetPmSoundSet()
-                .replace("{player}", target.getName())
-                .replace("{sound}", sound.name())
-        );
+        final boolean messageForTargetIsEmpty = !this.messages.getPmSoundRemoved().isEmpty();
+        if (sender != target || messageForTargetIsEmpty) {
+            sender.sendMessage(this.messages.getTargetPmSoundSet()
+                    .replace("{player}", target.getName())
+                    .replace("{sound}", sound.name())
+            );
+        }
 
-        if (!messages.getPmSoundSet().isEmpty()) {
-            target.sendMessage(messages.getPmSoundSet()
+        if (!messageForTargetIsEmpty) {
+            target.sendMessage(this.messages.getPmSoundSet()
                     .replace("{sound}", sound.name())
             );
         }

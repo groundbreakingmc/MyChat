@@ -22,18 +22,18 @@ public final class DatabaseHandler {
     }
 
     public void createConnection() {
-        final File dbFile = loadDatabaseFile();
+        final File dbFile = this.loadDatabaseFile();
         final String url = "jdbc:sqlite:" + dbFile;
 
         try {
             connection = DriverManager.getConnection(url);
-        } catch (SQLException ex) {
+        } catch (final SQLException ex) {
             ex.printStackTrace();
         }
     }
 
     private File loadDatabaseFile() {
-        final File dbFile = new File(plugin.getDataFolder() + File.separator + "database.db");
+        final File dbFile = new File(this.plugin.getDataFolder() + File.separator + "database.db");
         if (!dbFile.exists()) {
             try {
                 dbFile.createNewFile();
@@ -50,7 +50,7 @@ public final class DatabaseHandler {
             if (connection != null && !connection.isClosed()) {
                 connection.close();
             }
-        } catch (SQLException ex) {
+        } catch (final SQLException ex) {
             ex.printStackTrace();
         }
     }

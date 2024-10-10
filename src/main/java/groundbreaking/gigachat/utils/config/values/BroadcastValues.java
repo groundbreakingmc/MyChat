@@ -1,9 +1,9 @@
 package groundbreaking.gigachat.utils.config.values;
 
 import groundbreaking.gigachat.GigaChat;
-import groundbreaking.gigachat.utils.chatsColorizer.AbstractColorizer;
-import groundbreaking.gigachat.utils.chatsColorizer.BroadcastColorizer;
-import groundbreaking.gigachat.utils.colorizer.IColorizer;
+import groundbreaking.gigachat.utils.colorizer.basic.IColorizer;
+import groundbreaking.gigachat.utils.colorizer.messages.AbstractColorizer;
+import groundbreaking.gigachat.utils.colorizer.messages.BroadcastColorizer;
 import lombok.Getter;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -31,35 +31,35 @@ public final class BroadcastValues {
 
     public BroadcastValues(final GigaChat plugin) {
         this.plugin = plugin;
-        messageColorizer = new BroadcastColorizer(plugin);
+        this.messageColorizer = new BroadcastColorizer(plugin);
     }
 
     public void setValues() {
         final ConfigurationSection broadcast = plugin.getConfig().getConfigurationSection("broadcast");
         if (broadcast != null) {
-            colorizer = plugin.getColorizer(plugin.getConfig(), "broadcast.use-minimessages");
-            format = colorizer.colorize(broadcast.getString("format"));
-            cooldown = broadcast.getInt("cooldown");
+            this.colorizer = plugin.getColorizer(plugin.getConfig(), "broadcast.use-minimessages");
+            this.format = colorizer.colorize(broadcast.getString("format"));
+            this.cooldown = broadcast.getInt("cooldown");
 
-            setupHover(broadcast);
+            this.setupHover(broadcast);
         }
         else {
-            plugin.getMyLogger().warning("Failed to load section \"broadcast\" from file \"config.yml\". Please check your configuration file, or delete it and restart your server!");
-            plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
+            this.plugin.getMyLogger().warning("Failed to load section \"broadcast\" from file \"config.yml\". Please check your configuration file, or delete it and restart your server!");
+            this.plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
         }
     }
 
     private void setupHover(final ConfigurationSection broadcast) {
         final ConfigurationSection hover = broadcast.getConfigurationSection("hover");
         if (hover != null) {
-            isHoverEnabled = hover.getBoolean("enable");
-            hoverAction = hover.getString("click-action");
-            hoverValue = hover.getString("click-value");
-            hoverText = hover.getString("text");
+            this.isHoverEnabled = hover.getBoolean("enable");
+            this.hoverAction = hover.getString("click-action");
+            this.hoverValue = hover.getString("click-value");
+            this.hoverText = hover.getString("text");
         }
         else {
-            plugin.getMyLogger().warning("Failed to load section \"broadcast.hover\" from file \"config.yml\". Please check your configuration file, or delete it and restart your server!");
-            plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
+            this.plugin.getMyLogger().warning("Failed to load section \"broadcast.hover\" from file \"config.yml\". Please check your configuration file, or delete it and restart your server!");
+            this.plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
         }
     }
 }

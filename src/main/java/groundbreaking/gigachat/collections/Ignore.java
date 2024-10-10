@@ -17,6 +17,13 @@ public final class Ignore {
         return !ignoredPrivate.isEmpty() && ignoredPrivate.containsKey(name);
     }
 
+    public static boolean playerIgnoresChatAnyOne(final String name) {
+        return !ignoredChat.isEmpty()
+                && ignoredChat.containsKey(name)
+                && ignoredChat.get(name) != null
+                && !ignoredChat.get(name).isEmpty();
+    }
+
     public static boolean playerIgnoresPrivateAnyOne(final String name) {
         return !ignoredPrivate.isEmpty()
                 && ignoredPrivate.containsKey(name)
@@ -26,13 +33,6 @@ public final class Ignore {
 
     public static boolean ignoredChatContains(final String name, final String targetName) {
         return !ignoredChat.isEmpty() && ignoredChat.get(name).contains(targetName);
-    }
-
-    public static boolean playerIgnoresChatAnyOne(final String name) {
-        return !ignoredChat.isEmpty()
-                && ignoredChat.containsKey(name)
-                && ignoredChat.get(name) != null
-                && !ignoredChat.get(name).isEmpty();
     }
 
     public static boolean ignoredPrivateContains(final String name, final String targetName) {
@@ -81,7 +81,7 @@ public final class Ignore {
     }
 
     public static boolean isIgnoredPrivate(final String playerName, final String targetName) {
-        if (!ignoredPrivate.containsKey(playerName)) {
+        if (ignoredPrivate.isEmpty() || !ignoredPrivate.containsKey(playerName)) {
             ignoredPrivate.put(playerName, new ArrayList<>());
             return false;
         }
@@ -94,6 +94,6 @@ public final class Ignore {
     }
 
     public static List<String> getAllIgnoredPrivate(final String name) {
-        return ignoredChat.get(name);
+        return ignoredPrivate.get(name);
     }
 }

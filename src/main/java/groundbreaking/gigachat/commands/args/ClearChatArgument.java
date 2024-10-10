@@ -25,14 +25,14 @@ public final class ClearChatArgument extends ArgsConstructor {
 
         for (final Player player : Bukkit.getOnlinePlayers()) {
             if (!player.hasPermission("gigachat.bypass.clearchat")) {
-                player.sendMessage(clearMessage);
+                player.sendMessage(this.clearMessage);
             }
             if (player != sender) {
-                player.sendMessage(messages.getChatHasBeenClearedByAdministrator());
+                player.sendMessage(this.messages.getChatHasBeenClearedByAdministrator());
             }
         }
 
-        sender.sendMessage(messages.getChatHasBeenClearedByAdministrator());
+        sender.sendMessage(this.messages.getChatHasBeenClearedByAdministrator());
         return true;
     }
 }

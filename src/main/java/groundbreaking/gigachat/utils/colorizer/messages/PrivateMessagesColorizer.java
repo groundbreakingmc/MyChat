@@ -1,4 +1,4 @@
-package groundbreaking.gigachat.utils.chatsColorizer;
+package groundbreaking.gigachat.utils.colorizer.messages;
 
 import groundbreaking.gigachat.GigaChat;
 import org.bukkit.entity.Player;
@@ -11,8 +11,8 @@ public final class PrivateMessagesColorizer extends AbstractColorizer {
 
     @Override
     public String colorize(final Player player, final String message) {
-        if (player.hasPermission("gigachat.private.hex")) {
-            return messagesColorizer.colorize(message);
+        if (player.hasPermission("gigachat.color.private.hex")) {
+            return super.messagesColorizer.colorize(message);
         }
 
         final char[] letters = message.toCharArray();
@@ -35,6 +35,6 @@ public final class PrivateMessagesColorizer extends AbstractColorizer {
 
     @Override
     public String colorize(final String message) {
-        return messagesColorizer.colorize(message);
+        return super.messagesColorizer.colorize(message);
     }
 }

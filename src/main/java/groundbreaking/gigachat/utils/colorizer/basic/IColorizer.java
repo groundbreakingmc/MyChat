@@ -1,4 +1,4 @@
-package groundbreaking.gigachat.utils.colorizer;
+package groundbreaking.gigachat.utils.colorizer.basic;
 
 public interface IColorizer {
 

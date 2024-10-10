@@ -12,18 +12,18 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 
+// todo Ускорить
 public final class AutoMessages {
 
     private final Random random = new Random();
     private int i = 0;
 
     private final GigaChat plugin;
-    private final AutoMessagesValues configValues;
-    private AutoMessagesValues autoMessagesValues;
+    private final AutoMessagesValues autoMessagesValues;
 
     public AutoMessages(final GigaChat plugin) {
         this.plugin = plugin;
-        this.configValues = plugin.getAutoMessagesValues();
+        this.autoMessagesValues = plugin.getAutoMessagesValues();
     }
 
     public void run() {
@@ -31,7 +31,7 @@ public final class AutoMessages {
             public void run() {
                 process();
             }
-        }).runTaskTimerAsynchronously(this.plugin, 20L, autoMessagesValues.getSendInterval() * 20L);
+        }).runTaskTimerAsynchronously(this.plugin, 20L, this.autoMessagesValues.getSendInterval() * 20L);
     }
 
     private void process() {
@@ -40,8 +40,8 @@ public final class AutoMessages {
             return;
         }
 
-        final List<String> autoMessages = configValues.getAutoMessages().get(key);
-        final String soundString = configValues.getAutoMessagesSounds().get(key);
+        final List<String> autoMessages = this.autoMessagesValues.getAutoMessages().get(key);
+        final String soundString = this.autoMessagesValues.getAutoMessagesSounds().get(key);
 
         boolean isSoundEnabled = false;
         Sound sound = null; float soundVolume = 1.0f, soundPitch = 1.0f;
@@ -72,8 +72,8 @@ public final class AutoMessages {
     }
 
     private String getAutoMessage() {
-        final int size = configValues.getAutoMessages().size();
-        final int iterationsAmount = configValues.isRandom() ? random.nextInt(size) : i;
+        final int size = this.autoMessagesValues.getAutoMessages().size();
+        final int iterationsAmount = this.autoMessagesValues.isRandom() ? this.random.nextInt(size) : i;
 
         if (i >= size) {
             i = 0;
@@ -81,7 +81,7 @@ public final class AutoMessages {
 
         String randomKey = null;
 
-        final Iterator<String> iterator = configValues.getAutoMessages().keySet().iterator();
+        final Iterator<String> iterator = this.autoMessagesValues.getAutoMessages().keySet().iterator();
         for (int i = 0; i < iterationsAmount; i++) {
             if (iterator.hasNext()) {
                 randomKey = iterator.next();

@@ -22,21 +22,21 @@ public final class DisconnectListener implements Listener {
     @EventHandler
     public void onJoin(final PlayerJoinEvent event) {
         final String name = event.getPlayer().getName();
-        loadData(name);
+        this.loadData(name);
     }
 
     @EventHandler
     public void onQuit(final PlayerQuitEvent event) {
         final String name = event.getPlayer().getName();
-        saveData(name);
-        removeCooldown(name);
+        this.saveData(name);
+        this.removeCooldown(name);
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onKick(final PlayerKickEvent event) {
         final String name = event.getPlayer().getName();
-        saveData(name);
-        removeCooldown(name);
+        this.saveData(name);
+        this.removeCooldown(name);
     }
 
     private void loadData(final String name) {
@@ -44,7 +44,7 @@ public final class DisconnectListener implements Listener {
             DisabledChat.add(name);
         }
         if (DatabaseQueries.disabledPrivateMessagesContainsPlayer(name)) {
-            disabledPrivateMessages.add(name);
+            this.disabledPrivateMessages.add(name);
         }
         if (DatabaseQueries.ignoreChatContains(name)) {
             Ignore.addToIgnoredChat(name, DatabaseQueries.getIgnoredChat(name));
@@ -67,7 +67,7 @@ public final class DisconnectListener implements Listener {
         if (DisabledChat.contains(name)) {
             DatabaseQueries.addPlayerToDisabledChat(name);
         }
-        if (disabledPrivateMessages.contains(name)) {
+        if (this.disabledPrivateMessages.contains(name)) {
             DatabaseQueries.addPlayerToDisabledPrivateMessages(name);
         }
         if (Ignore.playerIgnoresChatAnyOne(name)) {
@@ -88,14 +88,14 @@ public final class DisconnectListener implements Listener {
     }
 
     private void removeCooldown(final String name) {
-        cooldowns.removePlayerLocalCooldown(name);
-        cooldowns.removePlayerGlobalCooldown(name);
-        cooldowns.removePlayerPrivateCooldown(name);
-        cooldowns.removePlayerIgnoreCooldown(name);
-        cooldowns.removePlayerSpyCooldown(name);
-        cooldowns.removeBroadcastCooldown(name);
+        this.cooldowns.removePlayerLocalCooldown(name);
+        this.cooldowns.removePlayerGlobalCooldown(name);
+        this.cooldowns.removePlayerPrivateCooldown(name);
+        this.cooldowns.removePlayerIgnoreCooldown(name);
+        this.cooldowns.removePlayerSpyCooldown(name);
+        this.cooldowns.removeBroadcastCooldown(name);
         DisabledChat.remove(name);
-        disabledPrivateMessages.remove(name);
+        this.disabledPrivateMessages.remove(name);
         Ignore.removeFromIgnoredChat(name);
         Ignore.removeFromIgnoredPrivate(name);
         LocalSpy.remove(name);

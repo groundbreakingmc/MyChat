@@ -26,21 +26,26 @@ public final class DisableOwnChatExecutor implements CommandExecutor, TabComplet
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
         if (!(sender instanceof Player playerSender)) {
-            sender.sendMessage(messages.getPlayerOnly());
+            sender.sendMessage(this.messages.getPlayerOnly());
             return true;
         }
 
-        return processDisable(playerSender);
+        if (!sender.hasPermission("gigachat.command.disableownchat")) {
+            sender.sendMessage(this.messages.getNoPermission());
+            return true;
+        }
+
+        return this.processDisable(playerSender);
     }
 
     private boolean processDisable(final Player sender) {
         final String name = sender.getName();
         if (DisabledChat.contains(name)) {
-            sender.sendMessage(messages.getOwnChatDisabled());
+            sender.sendMessage(this.messages.getOwnChatDisabled());
             DisabledChat.remove(name);
             DatabaseQueries.removePlayerFromDisabledChat(name);
         } else {
-            sender.sendMessage(messages.getOwnChatEnabled());
+            sender.sendMessage(this.messages.getOwnChatEnabled());
             DisabledChat.add(name);
         }
 

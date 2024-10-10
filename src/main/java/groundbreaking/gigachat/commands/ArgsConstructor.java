@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 @AllArgsConstructor @Getter
 public abstract class ArgsConstructor {
 
-    private String name, permission;
+    private final String name, permission;
 
     abstract public boolean execute(@NotNull CommandSender sender, @NotNull String[] args);
 }

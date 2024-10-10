@@ -10,15 +10,15 @@ public final class PaperLogger implements ILogger {
     private final LegacyComponentSerializer legacySection;
 
     public PaperLogger(final GigaChat plugin) {
-        logger = ComponentLogger.logger(plugin.getLogger().getName());
-        legacySection = LegacyComponentSerializer.legacySection();
+        this.logger = ComponentLogger.logger(plugin.getLogger().getName());
+        this.legacySection = LegacyComponentSerializer.legacySection();
     }
 
     public void info(final String msg) {
-        logger.info(legacySection.deserialize(msg));
+        this.logger.info(legacySection.deserialize(msg));
     }
 
     public void warning(final String msg) {
-        logger.warn(legacySection.deserialize(msg));
+        this.logger.warn(legacySection.deserialize(msg));
     }
 }

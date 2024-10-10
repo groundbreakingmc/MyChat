@@ -18,6 +18,7 @@ import net.md_5.bungee.api.chat.hover.content.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -25,6 +26,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public final class ChatListener implements Listener {
@@ -45,36 +47,36 @@ public final class ChatListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onMessageSendLowest(final AsyncPlayerChatEvent event) {
-        if (chatValues.isListenerPriorityLowest()) {
-            processEvent(event);
+        if (this.chatValues.isListenerPriorityLowest()) {
+            this.processEvent(event);
         }
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onMessageSendLow(final AsyncPlayerChatEvent event) {
-        if (chatValues.isListenerPriorityLow()) {
-            processEvent(event);
+        if (this.chatValues.isListenerPriorityLow()) {
+            this.processEvent(event);
         }
     }
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onMessageSendNormal(final AsyncPlayerChatEvent event) {
-        if (chatValues.isListenerPriorityNormal()) {
-            processEvent(event);
+        if (this.chatValues.isListenerPriorityNormal()) {
+            this.processEvent(event);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onMessageSendHigh(final AsyncPlayerChatEvent event) {
-        if (chatValues.isListenerPriorityHigh()) {
-            processEvent(event);
+        if (this.chatValues.isListenerPriorityHigh()) {
+            this.processEvent(event);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onMessageSendHighest(final AsyncPlayerChatEvent event) {
         if (chatValues.isListenerPriorityHighest()) {
-            processEvent(event);
+            this.processEvent(event);
         }
     }
 
@@ -82,38 +84,39 @@ public final class ChatListener implements Listener {
         final Player messageSender = event.getPlayer();
 
         if (DisableServerChatArgument.isChatDisabled() && !messageSender.hasPermission("gigachat.bypass.disabledchat")) {
-            messageSender.sendMessage(messages.getServerChatIsDisabled());
+            messageSender.sendMessage(this.messages.getServerChatIsDisabled());
             event.setCancelled(true);
             return;
         }
 
         final String name = messageSender.getName();
-        final String prefix = plugin.getChat().getPlayerPrefix(messageSender);
-        final String suffix = plugin.getChat().getPlayerSuffix(messageSender);
+        final String prefix = this.plugin.getChat().getPlayerPrefix(messageSender);
+        final String suffix = this.plugin.getChat().getPlayerSuffix(messageSender);
 
         final String[] replacementList = { name, prefix, suffix, "" };
 
         final String message = event.getMessage();
 
         final String formattedMessage;
-        if (chatValues.isGlobalForce() || isValidForGlobal(message)) {
-            if (cooldowns.hasCooldown(messageSender, name, "gigachat.bypass.cooldown.global", cooldowns.getGlobalCooldowns())) {
+        if (this.chatValues.isGlobalForce() || this.isValidForGlobal(message)) {
+            if (this.cooldowns.hasCooldown(messageSender, name, "gigachat.bypass.cooldown.global", this.cooldowns.getGlobalCooldowns())) {
                 final String restTime = Utils.getTime(
-                        (int) (chatValues.getGlobalCooldown() / 1000 + (cooldowns.getGlobalCooldowns().get(name) - System.currentTimeMillis()) / 1000)
+                        (int) (this.chatValues.getGlobalCooldown() / 1000 + (this.cooldowns.getGlobalCooldowns().get(name) - System.currentTimeMillis()) / 1000)
                 );
-                messageSender.sendMessage(messages.getChatCooldownMessage().replace("{time}", restTime));
+                final String cooldownMessage = this.messages.getChatCooldownMessage().replace("{time}", restTime);
+                messageSender.sendMessage(cooldownMessage);
                 event.setCancelled(true);
                 return;
             }
 
             event.getRecipients().clear();
-            event.getRecipients().addAll(getNotIgnored(messageSender));
+            event.getRecipients().addAll(this.getNotIgnored(messageSender));
 
             final String color = this.getGlobalColor(messageSender);
             replacementList[3] = color;
 
-            final String globalMessage = removeGlobalPrefix(message);
-            formattedMessage = getFormattedMessage(messageSender, globalMessage, chatValues.getGlobalFormat(), replacementList);
+            final String globalMessage = this.removeGlobalPrefix(message);
+            formattedMessage = this.getFormattedMessage(messageSender, globalMessage, chatValues.getGlobalFormat(), replacementList);
         }
         else {
             if (cooldowns.hasCooldown(messageSender, name, "gigachat.bypass.cooldown.local", cooldowns.getLocalCooldowns())) {
@@ -129,9 +132,9 @@ public final class ChatListener implements Listener {
             replacementList[3] = color;
 
             event.getRecipients().clear();
-            event.getRecipients().addAll(getRadius(messageSender));
+            event.getRecipients().addAll(this.getRadius(messageSender));
 
-            formattedMessage = getFormattedMessage(messageSender, message, chatValues.getLocalFormat(), replacementList);
+            formattedMessage = this.getFormattedMessage(messageSender, message, chatValues.getLocalFormat(), replacementList);
 
             if (chatValues.isNoOneHearEnabled()) {
                 final List<Player> validRecipients = new ArrayList<>(event.getRecipients());
@@ -161,21 +164,31 @@ public final class ChatListener implements Listener {
                     }
                 }
 
-                sendLocalSpy(messageSender, message, localSpyRecipients, replacementList);
+                this.sendLocalSpy(messageSender, message, localSpyRecipients, replacementList);
             }
         }
 
         if (chatValues.isHoverEnabled() && chatValues.isAdminHoverEnabled()) {
             event.setCancelled(true);
-            sendBothHover(messageSender, formattedMessage, new ArrayList<>(event.getRecipients()), replacementList);
+            this.sendBothHover(messageSender, formattedMessage, new ArrayList<>(event.getRecipients()), replacementList);
         }
         else if (chatValues.isHoverEnabled()) {
             event.setCancelled(true);
-            sendHover(messageSender, formattedMessage, chatValues.getHoverText(), chatValues.getHoverAction(), chatValues.getHoverValue(), new ArrayList<>(event.getRecipients()), replacementList);
+            final String hoverText = chatValues.getHoverText();
+            final String hoverAction = chatValues.getHoverAction();
+            final String hoverValue = chatValues.getHoverValue();
+            final List<Player> recipient = new ArrayList<>(event.getRecipients());
+
+            this.sendHover(messageSender, formattedMessage, hoverText, hoverAction, hoverValue, recipient, replacementList);
         }
         else if (chatValues.isAdminHoverEnabled()) {
             event.setCancelled(true);
-            sendHover(messageSender, formattedMessage, chatValues.getAdminHoverText(), chatValues.getAdminHoverAction(), chatValues.getAdminHoverValue(), new ArrayList<>(event.getRecipients()), replacementList);
+            final String adminHoverText = chatValues.getAdminHoverText();
+            final String adminHoverAction = chatValues.getHoverAction();
+            final String adminHoverValue = chatValues.getHoverValue();
+            final List<Player> adminRecipients = this.getAdminRecipients(new ArrayList<>(event.getRecipients()));
+
+            this.sendHover(messageSender, formattedMessage, adminHoverText, adminHoverAction, adminHoverValue, adminRecipients, replacementList);
         }
         else {
             event.setFormat(formattedMessage);
@@ -183,23 +196,31 @@ public final class ChatListener implements Listener {
     }
 
     private void sendBothHover(final Player player, final String formattedMessage, final List<Player> recipients, final String[] replacementList) {
-        final List<Player> adminRecipients = new ArrayList<>();
+        final List<Player> adminRecipients = this.getAdminRecipients(recipients);
 
-        for (int i = recipients.size() - 1; i >= 0; i--) {
-            final Player target = recipients.get(i);
-            if (target.hasPermission("gigachat.adminhover")) {
-                adminRecipients.add(target);
-                recipients.remove(i);
-            }
+        if (!recipients.isEmpty()) {
+            final String hoverText = chatValues.getHoverText();
+            final String hoverAction = chatValues.getHoverAction();
+            final String hoverValue = chatValues.getHoverValue();
+
+            this.sendHover(player, formattedMessage, hoverText, hoverAction, hoverValue, recipients, replacementList);
         }
+        
+        if (!adminRecipients.isEmpty()) {
+            final String adminHoverText = chatValues.getAdminHoverText();
+            final String adminHoverAction = chatValues.getHoverAction();
+            final String adminHoverValue = chatValues.getHoverValue();
 
-        sendHover(player, formattedMessage, chatValues.getHoverText(), chatValues.getHoverAction(), chatValues.getHoverValue(), recipients, replacementList);
-        sendHover(player, formattedMessage, chatValues.getAdminHoverText(), chatValues.getAdminHoverAction(), chatValues.getAdminHoverValue(), adminRecipients, replacementList);
+            this.sendHover(player, formattedMessage, adminHoverText, adminHoverAction, adminHoverValue, adminRecipients, replacementList);
+        }
     }
 
     private void sendHover(final Player player, final String formattedMessage, final String hoverText, final String hoverAction, String hoverValue, final List<Player> recipients, final String[] replacementList) {
-        final String hoverString = chatValues.getFormatsColorizer().colorize(
-                Utils.replacePlaceholders(player, Utils.replaceEach(hoverText, placeholders, replacementList))
+        final String hoverString = this.chatValues.getFormatsColorizer().colorize(
+                Utils.replacePlaceholders(
+                        player,
+                        Utils.replaceEach(hoverText, this.placeholders, replacementList)
+                )
         );
         final ClickEvent.Action clickEventAction = ClickEvent.Action.valueOf(hoverAction);
         hoverValue = hoverValue.replace("{player}", player.getName());
@@ -220,10 +241,14 @@ public final class ChatListener implements Listener {
     }
 
     private void sendLocalSpy(final Player sender, final String message, final List<Player> localSpyRecipients, final String[] replacementList) {
-        final String formattedMessage = getFormattedMessage(sender, message, chatValues.getLocalSpyFormat(), replacementList);
+        final String formattedMessage = this.getFormattedMessage(sender, message, this.chatValues.getLocalSpyFormat(), replacementList);
 
-        if (chatValues.isHoverEnabled()) {
-            sendHover(sender, formattedMessage, chatValues.getHoverText(), chatValues.getHoverAction(), chatValues.getHoverValue(), localSpyRecipients, replacementList);
+        if (this.chatValues.isHoverEnabled()) {
+            final String hoverText = this.chatValues.getHoverText();
+            final String hoverAction = this.chatValues.getHoverAction();
+            final String hoverValue = this.chatValues.getHoverValue();
+
+            this.sendHover(sender, formattedMessage, hoverText, hoverAction, hoverValue, localSpyRecipients, replacementList);
             return;
         }
 
@@ -233,40 +258,56 @@ public final class ChatListener implements Listener {
     }
 
     private String getLocalColor(final Player player) {
-        String playerGroup = plugin.getPerms().getPrimaryGroup(player);
-        return chatValues.getLocalGroupsColors().getOrDefault(playerGroup, "");
+        final String playerGroup = this.plugin.getPerms().getPrimaryGroup(player);
+        return this.chatValues.getLocalGroupsColors().getOrDefault(playerGroup, "");
     }
 
     private String getGlobalColor(final Player player) {
-        String playerGroup = plugin.getPerms().getPrimaryGroup(player);
-        return chatValues.getGlobalGroupsColors().getOrDefault(playerGroup, "");
+        final String playerGroup = this.plugin.getPerms().getPrimaryGroup(player);
+        return this.chatValues.getGlobalGroupsColors().getOrDefault(playerGroup, "");
+    }
+
+    private List<Player> getAdminRecipients(final List<Player> recipients) {
+        final List<Player> adminRecipients = new ArrayList<>();
+        for (int i = recipients.size() - 1; i >= 0; i--) {
+            final Player target = recipients.get(i);
+            if (target.hasPermission("gigachat.adminhover")) {
+                adminRecipients.add(target);
+                recipients.remove(i);
+            }
+        }
+
+        return adminRecipients;
     }
 
     public boolean isValidForGlobal(final String message) {
-        return message.trim().length() != 1 && message.charAt(0) == chatValues.getGlobalSymbol();
+        return message.trim().length() != 1 && message.charAt(0) == this.chatValues.getGlobalSymbol();
     }
 
     public String removeGlobalPrefix(final String message) {
-        return chatValues.isGlobalForce()
-                ? message
-                : message.substring(1).trim();
+        return this.chatValues.isGlobalForce() ? message : message.substring(1).trim();
     }
 
-    private List<Player> getRadius(final Player player) {
+    private List<Player> getRadius(final Player messageSender) {
+        final String senderName = messageSender.getName();
+        final World senderWorld = messageSender.getWorld();
+        final Location senderLocation = messageSender.getLocation();
+
         final List<Player> playerList = new ArrayList<>();
-        final double maxDist = Math.pow(chatValues.getLocalDistance(), 2.0D);
-        final Location location = player.getLocation();
-        for (final Player target : Bukkit.getOnlinePlayers()) {
-            if (Ignore.isIgnoredChat(target.getName(), player.getName())) {
+        final Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
+
+        final int localDistance = this.chatValues.getLocalDistance();
+        final double maxDist = Math.pow(localDistance, 2.0D);
+
+        for (final Player target : onlinePlayers) {
+            final String targetName = target.getName();
+            if (Ignore.isIgnoredChat(targetName, senderName) || DisabledChat.contains(targetName)) {
                 continue;
             }
 
-            if (DisabledChat.contains(target.getName())) {
-                continue;
-            }
-
-            if (target.getWorld() == player.getWorld()) {
-                final boolean distance = location.distanceSquared(target.getLocation()) <= maxDist;
+            if (target.getWorld() == senderWorld) {
+                final Location targetLocation = target.getLocation();
+                final boolean distance = senderLocation.distanceSquared(targetLocation) <= maxDist;
                 if (distance) {
                     playerList.add(target);
                 }
@@ -276,10 +317,12 @@ public final class ChatListener implements Listener {
         return playerList;
     }
 
-    private List<Player> getNotIgnored(final Player player) {
+    private List<Player> getNotIgnored(final Player messageSender) {
         final List<Player> playerList = new ArrayList<>();
         for (final Player target : Bukkit.getOnlinePlayers()) {
-            if (!Ignore.isIgnoredChat(target.getName(), player.getName())) {
+            final String senderName = messageSender.getName();
+            final String targetName = target.getName();
+            if (!Ignore.isIgnoredChat(targetName, senderName)) {
                 playerList.add(target);
             }
         }
@@ -287,11 +330,16 @@ public final class ChatListener implements Listener {
         return playerList;
     }
 
-    public String getFormattedMessage(Player player, String message, String format, String[] replacementList) {
-        final String formatted = chatValues.getFormatsColorizer().colorize(
-                Utils.replacePlaceholders(player, Utils.replaceEach(format, placeholders, replacementList))
+    public String getFormattedMessage(final Player messageSender, String message, final String format, final String[] replacementList) {
+        final String formattedMessage = this.chatValues.getFormatsColorizer().colorize(
+                Utils.replacePlaceholders(
+                        messageSender,
+                        Utils.replaceEach(format, this.placeholders, replacementList)
+                )
         );
-        final String chatMessage = chatValues.getChatsColorizer().colorize(player, message);
-        return formatted.replace("{message}", chatMessage).replace("%", "%%");
+
+        message = this.chatValues.getChatsColorizer().colorize(messageSender, message);
+
+        return formattedMessage.replace("{message}", message).replace("%", "%%");
     }
 }

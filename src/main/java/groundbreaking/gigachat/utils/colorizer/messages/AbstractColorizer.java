@@ -1,7 +1,7 @@
-package groundbreaking.gigachat.utils.chatsColorizer;
+package groundbreaking.gigachat.utils.colorizer.messages;
 
 import groundbreaking.gigachat.GigaChat;
-import groundbreaking.gigachat.utils.colorizer.IColorizer;
+import groundbreaking.gigachat.utils.colorizer.basic.IColorizer;
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet;
 import it.unimi.dsi.fastutil.chars.CharSet;
 import org.bukkit.entity.Player;

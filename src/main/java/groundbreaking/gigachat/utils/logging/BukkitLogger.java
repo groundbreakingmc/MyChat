@@ -2,6 +2,7 @@ package groundbreaking.gigachat.utils.logging;
 
 import groundbreaking.gigachat.GigaChat;
 
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public final class BukkitLogger implements ILogger {
@@ -9,14 +10,14 @@ public final class BukkitLogger implements ILogger {
     private final Logger logger;
 
     public BukkitLogger(final GigaChat plugin) {
-        logger = plugin.getServer().getLogger();
+        this.logger = plugin.getServer().getLogger();
     }
 
     public void info(final String msg) {
-        logger.info(msg);
+        this.logger.log(Level.INFO, msg);
     }
 
     public void warning(final String msg) {
-        logger.warning(msg);
+        this.logger.log(Level.WARNING, msg);
     }
 }

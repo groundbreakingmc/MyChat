@@ -33,36 +33,45 @@ public final class SocialSpyCommandExecutor implements CommandExecutor, TabCompl
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
         if (!(sender instanceof Player playerSender)) {
-            sender.sendMessage(messages.getPlayerOnly());
+            sender.sendMessage(this.messages.getPlayerOnly());
             return true;
         }
 
         if (!sender.hasPermission("gigachat.command.socialspy")) {
-            sender.sendMessage(messages.getNoPermission());
+            sender.sendMessage(this.messages.getNoPermission());
             return true;
         }
 
         final String senderName = sender.getName();
-        if (cooldowns.hasCooldown(playerSender, senderName, "gigachat.bypass.cooldown.socialspy", cooldowns.getSpyCooldowns())) {
-            final String restTime = Utils.getTime(
-                    (int) (pmValues.getSpyCooldown() / 1000 + (cooldowns.getSpyCooldowns().get(senderName) - System.currentTimeMillis()) / 1000)
-            );
-            sender.sendMessage(messages.getCommandCooldownMessage().replace("{time}", restTime));
+        if (this.hasCooldown(playerSender, senderName)) {
+            this.sendMessageHasCooldown(playerSender, senderName);
             return true;
         }
 
         if (SocialSpy.contains(senderName)) {
             SocialSpy.remove(senderName);
-            sender.sendMessage(messages.getSpyDisabled());
+            sender.sendMessage(this.messages.getSpyDisabled());
         }
         else {
             SocialSpy.add(senderName);
-            sender.sendMessage(messages.getSpyEnabled());
+            sender.sendMessage(this.messages.getSpyEnabled());
         }
 
-        cooldowns.addCooldown(senderName, cooldowns.getSpyCooldowns());
+        this.cooldowns.addCooldown(senderName, this.cooldowns.getSpyCooldowns());
 
         return true;
+    }
+
+    private boolean hasCooldown(final Player playerSender, final String senderName) {
+        return this.cooldowns.hasCooldown(playerSender, senderName, "gigachat.bypass.cooldown.socialspy", this.cooldowns.getSpyCooldowns());
+    }
+
+    private void sendMessageHasCooldown(final Player playerSender, final String senderName) {
+        final long timeLeftInMillis = this.cooldowns.getSpyCooldowns().get(senderName) - System.currentTimeMillis();
+        final int result = (int) (this.pmValues.getSpyCooldown() / 1000 + timeLeftInMillis / 1000);
+        final String restTime = Utils.getTime(result);
+        final String message = this.messages.getCommandCooldownMessage().replace("{time}", restTime);
+        playerSender.sendMessage(message);
     }
 
     @Override

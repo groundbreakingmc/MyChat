@@ -22,7 +22,7 @@ public class LocalSpyArgument extends ArgsConstructor {
     public boolean execute(@NotNull CommandSender sender, @NotNull String[] args) {
 
         if (!(sender instanceof Player playerSender)) {
-            sender.sendMessage(messages.getPlayerOnly());
+            sender.sendMessage(this.messages.getPlayerOnly());
             return true;
         }
 
@@ -31,10 +31,10 @@ public class LocalSpyArgument extends ArgsConstructor {
         if (LocalSpy.contains(senderName)) {
             LocalSpy.remove(senderName);
             DatabaseQueries.removePlayerFromLocalSpy(senderName);
-            sender.sendMessage(messages.getLocalSpyDisabled());
+            sender.sendMessage(this.messages.getLocalSpyDisabled());
         } else {
             LocalSpy.add(senderName);
-            sender.sendMessage(messages.getLocalSpyEnabled());
+            sender.sendMessage(this.messages.getLocalSpyEnabled());
         }
 
         return true;

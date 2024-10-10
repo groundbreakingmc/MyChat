@@ -1,12 +1,8 @@
 package groundbreaking.gigachat.utils;
 
 import groundbreaking.gigachat.GigaChat;
-import lombok.Getter;
 
 public final class ServerInfo {
-
-    @Getter
-    private final boolean isPaperOrFork = checkIsPaperOrFork();
 
     public int getSubVersion(final GigaChat plugin) {
         try {
@@ -17,7 +13,7 @@ public final class ServerInfo {
         }
     }
 
-    public boolean checkIsPaperOrFork() {
+    public boolean isPaperOrFork() {
         try {
             Class.forName("com.destroystokyo.paper.utils.PaperPluginLogger");
             return true;

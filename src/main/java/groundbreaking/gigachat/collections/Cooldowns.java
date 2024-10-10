@@ -29,36 +29,36 @@ public final class Cooldowns {
     }
     
     public void setCooldowns() {
-        localCooldowns = new ExpiringMap<>(plugin.getChatValues().getLocalCooldown(), TimeUnit.MILLISECONDS);
-        globalCooldowns = new ExpiringMap<>(plugin.getChatValues().getGlobalCooldown(), TimeUnit.MILLISECONDS);
-        privateCooldowns = new ExpiringMap<>(plugin.getPmValues().getPmCooldown(), TimeUnit.MILLISECONDS);
-        ignoreCooldowns = new ExpiringMap<>(plugin.getPmValues().getIgnoreCooldown(), TimeUnit.MILLISECONDS);
-        spyCooldowns = new ExpiringMap<>(plugin.getPmValues().getSpyCooldown(), TimeUnit.MILLISECONDS);
-        broadcastCooldowns = new ExpiringMap<>(plugin.getBroadcastValues().getCooldown(), TimeUnit.MILLISECONDS);
+        this.localCooldowns = new ExpiringMap<>(this.plugin.getChatValues().getLocalCooldown(), TimeUnit.MILLISECONDS);
+        this.globalCooldowns = new ExpiringMap<>(this.plugin.getChatValues().getGlobalCooldown(), TimeUnit.MILLISECONDS);
+        this.privateCooldowns = new ExpiringMap<>(this.plugin.getPmValues().getPmCooldown(), TimeUnit.MILLISECONDS);
+        this.ignoreCooldowns = new ExpiringMap<>(this.plugin.getPmValues().getIgnoreCooldown(), TimeUnit.MILLISECONDS);
+        this.spyCooldowns = new ExpiringMap<>(this.plugin.getPmValues().getSpyCooldown(), TimeUnit.MILLISECONDS);
+        this.broadcastCooldowns = new ExpiringMap<>(this.plugin.getBroadcastValues().getCooldown(), TimeUnit.MILLISECONDS);
     }
 
     public void removePlayerLocalCooldown(final String playerName) {
-       localCooldowns.remove(playerName);
+        this.localCooldowns.remove(playerName);
     }
 
     public void removePlayerGlobalCooldown(final String playerName) {
-       globalCooldowns.remove(playerName);
+        this.globalCooldowns.remove(playerName);
     }
 
     public void removePlayerPrivateCooldown(final String playerName) {
-       privateCooldowns.remove(playerName);
+        this.privateCooldowns.remove(playerName);
     }
 
     public void removePlayerIgnoreCooldown(final String playerName) {
-       ignoreCooldowns.remove(playerName);
+        this.ignoreCooldowns.remove(playerName);
     }
 
     public void removePlayerSpyCooldown(final String playerName) {
-       spyCooldowns.remove(playerName);
+        this.spyCooldowns.remove(playerName);
     }
 
     public void removeBroadcastCooldown(final String playerName) {
-        broadcastCooldowns.remove(playerName);
+        this.broadcastCooldowns.remove(playerName);
     }
 
     public boolean hasCooldown(final Player player, final String name, final String permission, final ExpiringMap<String, Long> playerCooldown) {

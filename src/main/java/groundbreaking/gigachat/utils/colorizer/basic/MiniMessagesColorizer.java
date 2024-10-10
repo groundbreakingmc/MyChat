@@ -1,4 +1,4 @@
-package groundbreaking.gigachat.utils.colorizer;
+package groundbreaking.gigachat.utils.colorizer.basic;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -12,7 +12,7 @@ public final class MiniMessagesColorizer implements IColorizer {
             return message;
         }
 
-        Component component = MiniMessage.miniMessage().deserialize(message);
+        final Component component = MiniMessage.miniMessage().deserialize(message);
         return LegacyComponentSerializer.legacySection().serialize(component);
     }
 }

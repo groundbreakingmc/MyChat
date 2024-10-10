@@ -7,13 +7,10 @@ import java.util.HashMap;
 
 public final class PmSounds {
 
-    private final GigaChat plugin;
-
     private static final HashMap<String, String> sounds = new HashMap<>();
     private static String defaultSound;
 
     public PmSounds(final GigaChat plugin) {
-        this.plugin = plugin;
         PmSounds.defaultSound = plugin.getPmValues().getSound();
     }
 

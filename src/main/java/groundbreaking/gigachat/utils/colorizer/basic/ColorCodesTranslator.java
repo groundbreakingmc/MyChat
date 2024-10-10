@@ -1,4 +1,4 @@
-package groundbreaking.gigachat.utils.colorizer;
+package groundbreaking.gigachat.utils.colorizer.basic;
 
 import it.unimi.dsi.fastutil.chars.CharOpenHashSet;
 import it.unimi.dsi.fastutil.chars.CharSet;

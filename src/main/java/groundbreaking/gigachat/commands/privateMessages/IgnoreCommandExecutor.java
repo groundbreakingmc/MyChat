@@ -17,6 +17,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,140 +39,135 @@ public final class IgnoreCommandExecutor implements CommandExecutor, TabComplete
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
         if (!(sender instanceof Player playerSender)) {
-            sender.sendMessage(messages.getPlayerOnly());
+            sender.sendMessage(this.messages.getPlayerOnly());
             return true;
         }
 
         final String senderName = playerSender.getName();
-        if (cooldowns.hasCooldown(playerSender, senderName, "gigachat.bypass.cooldown.ignore", cooldowns.getIgnoreCooldowns())) {
-            final String restTime = Utils.getTime(
-                    (int) (pmValues.getPmCooldown() / 1000 + (cooldowns.getIgnoreCooldowns().get(senderName) - System.currentTimeMillis()) / 1000)
-            );
-            playerSender.sendMessage(messages.getCommandCooldownMessage().replace("{time}", restTime));
+        if (this.hasCooldown(playerSender, senderName)) {
+            sendMessageHasCooldown(playerSender, senderName);
             return true;
         }
 
         final boolean hasChatIgnorePerm = sender.hasPermission("gigachat.command.ignore.chat");
         final boolean hasPrivateIgnorePerm = sender.hasPermission("gigachat.command.ignore.private");
 
+        int argsLength = 1;
+        IgnoreCommandExecutor.IgnoreType ignoreType = hasChatIgnorePerm ? IgnoreCommandExecutor.IgnoreType.CHAT : IgnoreCommandExecutor.IgnoreType.PRIVATE;
+
         if (hasChatIgnorePerm && hasPrivateIgnorePerm) {
-            if (args.length < 2) {
-                sender.sendMessage(messages.getIgnoreUsageError());
-                return true;
-            }
-
-            final Player target = Bukkit.getPlayer(args[1]);
-
-            if (target == null || !playerSender.canSee(target) || vanishChecker.isVanished(target)) {
-                sender.sendMessage(messages.getPlayerNotFound());
-                return true;
-            }
-
-            if (target == sender) {
-                sender.sendMessage(messages.getCannotIgnoreHimself());
-                return true;
-            }
-
-            final String targetName = target.getName();
+            argsLength = 2;
 
             switch(args[0].toLowerCase()) {
-                case "chat" -> {
-                    processChat(playerSender, senderName, targetName);
-                }
-                case "private" -> {
-                    processPrivate(playerSender, senderName, targetName);
-                }
+                case "chat" -> {}
+                case "private" -> ignoreType = IgnoreCommandExecutor.IgnoreType.PRIVATE;
                 default -> {
-                    playerSender.sendMessage(messages.getIgnoreUsageError());
+                    playerSender.sendMessage(this.messages.getIgnoreUsageError());
+                    return true;
                 }
             }
+        }
+
+        if (args.length < argsLength) {
+            sender.sendMessage(this.messages.getIgnoreUsageError());
             return true;
         }
 
-        if (args.length < 1) {
-            playerSender.sendMessage(messages.getIgnoreUsageError());
-            return true;
-        }
+        final Player target = Bukkit.getPlayer(args[argsLength]);
 
-        final Player target = Bukkit.getPlayer(args[0]);
-
-        if (target == null || !playerSender.canSee(target) || vanishChecker.isVanished(target)) {
-            playerSender.sendMessage(messages.getPlayerNotFound());
+        if (target == null || !playerSender.canSee(target) || this.vanishChecker.isVanished(target)) {
+            playerSender.sendMessage(this.messages.getPlayerNotFound());
             return true;
         }
 
         if (target == playerSender) {
-            playerSender.sendMessage(messages.getCannotIgnoreHimself());
+            playerSender.sendMessage(this.messages.getCannotIgnoreHimself());
             return true;
         }
 
         final String targetName = target.getName();
 
-        if (hasChatIgnorePerm) {
-            processChat(playerSender, senderName, targetName);
-        } else if (hasPrivateIgnorePerm) {
-            processPrivate(playerSender, senderName, targetName);
+        switch(ignoreType) {
+            case CHAT -> this.processChat(playerSender, senderName, targetName);
+            case PRIVATE -> this.processPrivate(playerSender, senderName, targetName);
+            default -> playerSender.sendMessage(this.messages.getIgnoreUsageError());
         }
 
         return true;
     }
 
+    private boolean hasCooldown(final Player playerSender, final String senderName) {
+        return this.cooldowns.hasCooldown(playerSender, senderName, "gigachat.bypass.cooldown.ignore", this.cooldowns.getIgnoreCooldowns());
+    }
+
+    private void sendMessageHasCooldown(final Player playerSender, final String senderName) {
+        final long timeLeftInMillis = this.cooldowns.getIgnoreCooldowns().get(senderName) - System.currentTimeMillis();
+        final int result = (int) (this.pmValues.getPmCooldown() / 1000 + timeLeftInMillis / 1000);
+        final String restTime = Utils.getTime(result);
+        final String message = this.messages.getCommandCooldownMessage().replace("{time}", restTime);
+        playerSender.sendMessage(message);
+    }
+
     private void processChat(final Player sender, final String senderName, final String targetName) {
         if (!Ignore.ignoredChatContains(senderName)) {
             Ignore.addToIgnoredChat(senderName, new ArrayList<>(List.of(targetName)));
-            sender.sendMessage(messages.getChatIgnoreEnabled().replace("{player}", targetName));
+            sender.sendMessage(this.messages.getChatIgnoreEnabled().replace("{player}", targetName));
             return;
         }
 
         if (Ignore.ignoredChatContains(senderName, targetName)) {
             Ignore.removeFromIgnoredChat(senderName, targetName);
             DatabaseQueries.removePlayerFromIgnoreChat(senderName);
-            sender.sendMessage(messages.getChatIgnoreDisabled().replace("{player}", targetName));
+            sender.sendMessage(this.messages.getChatIgnoreDisabled().replace("{player}", targetName));
         }
         else {
             Ignore.addToIgnoredChat(senderName, targetName);
-            sender.sendMessage(messages.getChatIgnoreEnabled().replace("{player}", targetName));
+            sender.sendMessage(this.messages.getChatIgnoreEnabled().replace("{player}", targetName));
         }
 
-        cooldowns.addCooldown(senderName, cooldowns.getIgnoreCooldowns());
+        this.cooldowns.addCooldown(senderName, this.cooldowns.getIgnoreCooldowns());
     }
 
     private void processPrivate(final Player sender, final String senderName, final String targetName) {
         if (!Ignore.ignoredPrivateContains(senderName)) {
             Ignore.addToIgnoredPrivate(senderName, new ArrayList<>(List.of(targetName)));
-            sender.sendMessage(messages.getPrivateIgnoreEnabled().replace("{player}", targetName));
+            sender.sendMessage(this.messages.getPrivateIgnoreEnabled().replace("{player}", targetName));
             return;
         }
 
         if (Ignore.ignoredPrivateContains(senderName, targetName)) {
             Ignore.removeFromIgnoredPrivate(senderName, targetName);
             DatabaseQueries.removePlayerFromIgnorePrivate(senderName);
-            sender.sendMessage(messages.getPrivateIgnoreDisabled().replace("{player}", targetName));
+            sender.sendMessage(this.messages.getPrivateIgnoreDisabled().replace("{player}", targetName));
         }
         else {
             Ignore.addToIgnoredPrivate(senderName, targetName);
-            sender.sendMessage(messages.getPrivateIgnoreEnabled().replace("{player}", targetName));
+            sender.sendMessage(this.messages.getPrivateIgnoreEnabled().replace("{player}", targetName));
         }
 
-        cooldowns.addCooldown(senderName, cooldowns.getIgnoreCooldowns());
+        this.cooldowns.addCooldown(senderName, this.cooldowns.getIgnoreCooldowns());
     }
 
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (sender instanceof Player playerSender) {
-            if (sender.hasPermission("gigachat.command.ignore.chat")
-                    && sender.hasPermission("gigachat.command.ignore.private")) {
+
+            final boolean hasChatIgnorePerm = sender.hasPermission("gigachat.command.ignore.chat");
+            final boolean hasPrivateIgnorePerm = sender.hasPermission("gigachat.command.ignore.private");
+
+            if (hasChatIgnorePerm && hasPrivateIgnorePerm) {
                 if (args.length == 1) {
                     return List.of("chat", "private");
                 }
+
                 if (args.length == 2) {
                     final String input = args[1].toLowerCase();
-                    return getPlayer(playerSender, input);
+                    return this.getPlayer(playerSender, input);
                 }
             }
             else if (args.length == 1) {
                 final String input = args[0].toLowerCase();
-                return getPlayer(playerSender, input);
+                return this.getPlayer(playerSender, input);
             }
         }
 
@@ -180,17 +176,31 @@ public final class IgnoreCommandExecutor implements CommandExecutor, TabComplete
     }
 
     private List<String> getPlayer(final Player sender, final String input) {
+        final String senderName = sender.getName();
+
         final List<String> players = new ArrayList<>();
-        for (final Player player : Bukkit.getOnlinePlayers()) {
-            final String playerName = player.getName();
-            if (Ignore.isIgnoredChat(sender.getName(), playerName) || Ignore.isIgnoredChat(playerName, sender.getName())) {
+        final Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
+
+        for (final Player target : onlinePlayers) {
+            if (sender == target) {
                 continue;
             }
 
-            if (playerName.toLowerCase().startsWith(input) && !vanishChecker.isVanished(player)) {
+            final String playerName = target.getName();
+            if (Ignore.isIgnoredChat(senderName, playerName) || Ignore.isIgnoredChat(playerName, senderName)) {
+                continue;
+            }
+
+            if (playerName.toLowerCase().startsWith(input) && !this.vanishChecker.isVanished(target)) {
                 players.add(playerName);
             }
         }
+
         return players;
+    }
+
+    private enum IgnoreType {
+        CHAT,
+        PRIVATE
     }
 }

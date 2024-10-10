@@ -43,31 +43,29 @@ public final class BroadcastCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
         if (!sender.hasPermission("gigachat.command.broadcast")) {
-            sender.sendMessage(messages.getNoPermission());
+            sender.sendMessage(this.messages.getNoPermission());
             return true;
         }
 
         if (args.length < 1) {
-            sender.sendMessage(messages.getBroadcastUsageError());
+            sender.sendMessage(this.messages.getBroadcastUsageError());
             return true;
         }
 
         final boolean isPlayerSender = sender instanceof Player;
         if (isPlayerSender) {
-            final String senderName = sender.getName();
-            if (cooldowns.hasCooldown((Player) sender, senderName, "gigachat.bypass.cooldown.broadcast", cooldowns.getBroadcastCooldowns())) {
-                final String restTime = Utils.getTime(
-                        (int) (broadcastValues.getCooldown() / 1000 + (cooldowns.getSpyCooldowns().get(senderName) - System.currentTimeMillis()) / 1000)
-                );
-                sender.sendMessage(messages.getCommandCooldownMessage().replace("{time}", restTime));
+            final Player playerSender = (Player) sender;
+            final String senderName = playerSender.getName();
+            if (this.hasCooldown(playerSender, senderName)) {
+                this.sendMessageHasCooldown(playerSender, senderName);
                 return true;
             }
         }
 
         final List<Player> recipients = new ArrayList<>(Bukkit.getOnlinePlayers());
-        final String message = getMessage(sender, args, isPlayerSender);
+        final String message = this.getMessage(sender, args, isPlayerSender);
 
-        if (isPlayerSender && broadcastValues.isHoverEnabled()) {
+        if (isPlayerSender && this.broadcastValues.isHoverEnabled()) {
             sendHover((Player) sender, message, recipients);
         } else {
             for (int i = 0; i < recipients.size(); i++) {
@@ -76,42 +74,51 @@ public final class BroadcastCommand implements CommandExecutor, TabCompleter {
         }
 
         if (isPlayerSender) {
-            cooldowns.addCooldown(sender.getName(), cooldowns.getBroadcastCooldowns());
+            this.cooldowns.addCooldown(sender.getName(), this.cooldowns.getBroadcastCooldowns());
         }
 
-        consoleCommandSender.sendMessage(message);
+        this.consoleCommandSender.sendMessage(message);
 
         return true;
     }
 
+    private boolean hasCooldown(final Player playerSender, final String senderName) {
+        return this.cooldowns.hasCooldown(playerSender, senderName, "gigachat.bypass.cooldown.broadcast", cooldowns.getBroadcastCooldowns());
+    }
+
+    private void sendMessageHasCooldown(final Player playerSender, final String senderName) {
+        final long timeLeftInMillis = this.cooldowns.getBroadcastCooldowns().get(senderName) - System.currentTimeMillis();
+        final int result = (int) (this.broadcastValues.getCooldown() / 1000 + timeLeftInMillis / 1000);
+        final String restTime = Utils.getTime(result);
+        final String message = this.messages.getCommandCooldownMessage().replace("{time}", restTime);
+        playerSender.sendMessage(message);
+    }
+
     private String getMessage(final CommandSender sender, final String[] args, final boolean isPlayerSender) {
         final String name = sender.getName();
-        final String prefix;
-        final String suffix;
+        String prefix = "", suffix = "";
         final String message;
 
         if (isPlayerSender) {
             final Player playerSender = (Player) sender;
-            prefix = plugin.getChat().getPlayerPrefix(playerSender);
-            suffix = plugin.getChat().getPlayerSuffix(playerSender);
-            message = broadcastValues.getMessageColorizer().colorize((Player) sender, String.join(" ", Arrays.copyOfRange(args, 0, args.length)).trim());
+            prefix = this.plugin.getChat().getPlayerPrefix(playerSender);
+            suffix = this.plugin.getChat().getPlayerSuffix(playerSender);
+            message = this.broadcastValues.getMessageColorizer().colorize((Player) sender, String.join(" ", Arrays.copyOfRange(args, 0, args.length)).trim());
         } else {
-            prefix = "";
-            suffix = "";
-            message = broadcastValues.getColorizer().colorize(String.join(" ", Arrays.copyOfRange(args, 0, args.length)).trim());
+            message = this.broadcastValues.getColorizer().colorize(String.join(" ", Arrays.copyOfRange(args, 0, args.length)).trim());
         }
 
         final String[] replacementList = { name, prefix, suffix, message };
 
-        return Utils.replaceEach(broadcastValues.getFormat(), replacementList, placeholders);
+        return Utils.replaceEach(this.broadcastValues.getFormat(), replacementList, this.placeholders);
     }
 
     private void sendHover(final Player sender, final String formattedMessage, final List<Player> recipients) {
-        final String hoverString = broadcastValues.getColorizer().colorize(
-                Utils.replacePlaceholders(sender, broadcastValues.getHoverText())
+        final String hoverString = this.broadcastValues.getColorizer().colorize(
+                Utils.replacePlaceholders(sender, this.broadcastValues.getHoverText())
         );
-        final ClickEvent.Action hoverAction = ClickEvent.Action.valueOf(broadcastValues.getHoverAction());
-        final String hoverValue = broadcastValues.getHoverValue().replace("{player}", sender.getName());
+        final ClickEvent.Action hoverAction = ClickEvent.Action.valueOf(this.broadcastValues.getHoverAction());
+        final String hoverValue = this.broadcastValues.getHoverValue().replace("{player}", sender.getName());
 
         final HoverEvent hoverText = new HoverEvent(HoverEvent.Action.SHOW_TEXT, new Text(TextComponent.fromLegacyText(hoverString)));
         final ClickEvent clickEvent = new ClickEvent(hoverAction, hoverValue);

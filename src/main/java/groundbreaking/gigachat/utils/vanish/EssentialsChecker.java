@@ -14,6 +14,6 @@ public final class EssentialsChecker implements IVanishChecker {
 
     @Override
     public boolean isVanished(final Player player) {
-        return essentials.getUser(player).isVanished();
+        return this.essentials.getUser(player).isVanished();
     }
 }

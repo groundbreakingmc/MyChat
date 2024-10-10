@@ -24,29 +24,29 @@ public final class MainCommandHandler implements CommandExecutor, TabCompleter {
     }
 
     public void registerArgument(final ArgsConstructor argument) {
-        arguments.put(argument.getName(), argument);
+        this.arguments.put(argument.getName(), argument);
     }
 
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String commandlabel, @NotNull String[] args) {
 
         if (args.length < 1) {
-            if (hasAnyPluginPermission(sender)) {
-                sender.sendMessage(messages.getNonExistArgument());
+            if (this.hasAnyPluginPermission(sender)) {
+                sender.sendMessage(this.messages.getNonExistArgument());
             } else {
-                sender.sendMessage(messages.getNoPermission());
+                sender.sendMessage(this.messages.getNoPermission());
             }
             return true;
         }
 
-        final ArgsConstructor argument = arguments.get(args[0]);
+        final ArgsConstructor argument = this.arguments.get(args[0]);
 
         if (argument == null) {
-            sender.sendMessage(messages.getNonExistArgument());
+            sender.sendMessage(this.messages.getNonExistArgument());
             return true;
         }
 
         if (!sender.hasPermission(argument.getPermission())) {
-            sender.sendMessage(messages.getNoPermission());
+            sender.sendMessage(this.messages.getNoPermission());
             return true;
         }
 
@@ -68,9 +68,9 @@ public final class MainCommandHandler implements CommandExecutor, TabCompleter {
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         final List<String> list = new ArrayList<>();
+        final String input = args[args.length - 1].toUpperCase();
 
         if (args.length == 1) {
-            final String input = args[0].toLowerCase();
 
             if (sender.hasPermission("gigachat.command.clearchat") && "clearchat".startsWith(input)) {
                 list.add("clearchat");
@@ -87,20 +87,27 @@ public final class MainCommandHandler implements CommandExecutor, TabCompleter {
             if (sender.hasPermission("gigachat.command.setpmsound") && "setpmsound".startsWith(input)) {
                 list.add("setpmsound");
             }
-        }
-        else if (args.length == 2 && args[0].equalsIgnoreCase("setpmsound") && sender.hasPermission("gigachat.command.setpmsound")) {
-            list.addAll(getPlayers(args[1].toLowerCase()));
-        }
-        else if (args.length == 3 && args[0].equalsIgnoreCase("setpmsound") && sender.hasPermission("gigachat.command.setpmsound")) {
-            final String input = args[2].toUpperCase();
-            if ("none".startsWith(input.toLowerCase())) {
-                list.add("none");
-            }
 
-            for (final Sound sound : Sound.values()) {
-                final String soundName = sound.name();
-                if (soundName.startsWith(input)) {
-                    list.add(soundName);
+            return list;
+        }
+
+        final boolean isSetpmsoundArg = args[0].equalsIgnoreCase("setpmsound");
+        if (isSetpmsoundArg) {
+            final boolean hasSetpmsoundPerm = sender.hasPermission("gigachat.command.setpmsound");
+            if (args.length == 2 && hasSetpmsoundPerm) {
+                final List<String> playerNames = this.getPlayers(input);
+                list.addAll(playerNames);
+            }
+            else if (args.length == 3 && hasSetpmsoundPerm) {
+                if ("none".startsWith(input.toLowerCase())) {
+                    list.add("none");
+                }
+
+                for (final Sound sound : Sound.values()) {
+                    final String soundName = sound.name();
+                    if (soundName.startsWith(input)) {
+                        list.add(soundName);
+                    }
                 }
             }
         }

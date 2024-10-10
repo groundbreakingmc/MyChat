@@ -3,6 +3,8 @@ package groundbreaking.gigachat.listeners;
 import groundbreaking.gigachat.GigaChat;
 import groundbreaking.gigachat.utils.Utils;
 import groundbreaking.gigachat.utils.config.values.NewbieCommandsValues;
+import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -21,76 +23,93 @@ public final class CommandListener implements Listener {
 
     @EventHandler(priority = EventPriority.LOWEST)
     public void onCommandUseLowest(final PlayerCommandPreprocessEvent event) {
-        if (newbieValues.isListenerPriorityLowest()) {
-            processEvent(event);
+        if (this.newbieValues.isListenerPriorityLowest()) {
+            this.processEvent(event);
         }
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onCommandUseLow(final PlayerCommandPreprocessEvent event) {
-        if (newbieValues.isListenerPriorityLow()) {
-            processEvent(event);
+        if (this.newbieValues.isListenerPriorityLow()) {
+            this.processEvent(event);
         }
     }
 
     @EventHandler(priority = EventPriority.NORMAL)
     public void onCommandUseNormal(final PlayerCommandPreprocessEvent event) {
-        if (newbieValues.isListenerPriorityNormal()) {
-            processEvent(event);
+        if (this.newbieValues.isListenerPriorityNormal()) {
+            this.processEvent(event);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     public void onCommandUseHigh(final PlayerCommandPreprocessEvent event) {
-        if (newbieValues.isListenerPriorityHigh()) {
-            processEvent(event);
+        if (this.newbieValues.isListenerPriorityHigh()) {
+            this.processEvent(event);
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onCommandUseHighest(final PlayerCommandPreprocessEvent event) {
-        if (newbieValues.isListenerPriorityHighest()) {
-            processEvent(event);
+        if (this.newbieValues.isListenerPriorityHighest()) {
+            this.processEvent(event);
         }
     }
 
     private void processEvent(final PlayerCommandPreprocessEvent event) {
-        if (!newbieValues.isEnabled()) {
+        if (!this.newbieValues.isEnabled()) {
             return;
         }
 
         final Player player = event.getPlayer();
+
         if (player.hasPermission("gigachat.bypass.commandsnewbie")) {
             return;
         }
 
         final String enteredCommand = event.getMessage();
 
-        long time = newbieValues.getCounter().count(player);
+        long time = this.newbieValues.getCounter().count(player);
 
-        if (newbieValues.isGiveBypassPermissions()) {
-            if (time <= newbieValues.getBypassRequiredTime()) {
-                plugin.getPerms().playerAdd(player, "gigachat.bypass.commandsnewbie");
+        if (this.newbieValues.isGiveBypassPermissionEnabled()) {
+            if (time <= this.newbieValues.getRequiredTimeToGetBypassPerm()) {
+                final String bypassPermission = "gigachat.bypass.commandsnewbie";
+                this.plugin.getPerms().playerAdd(player, bypassPermission);
             }
         }
 
-        if (time > newbieValues.getRequiredTime()) {
+        if (time > this.newbieValues.getRequiredTime()) {
             return;
         }
 
-        for (String blockedCommand : newbieValues.getBlockedCommands()) {
-            if (isBlocked(enteredCommand, blockedCommand)) {
-                final String restTime = Utils.getTime((int) (newbieValues.getRequiredTime() - time));
-                player.sendMessage(newbieValues.getDenyMessage().replace("{time}", restTime));
-
-                if (newbieValues.isDenySoundEnabled()) {
-                    player.playSound(player.getLocation(), newbieValues.getDenySound(), newbieValues.getDenySoundVolume(), newbieValues.getDenySoundPitch());
-                }
-
-                event.setCancelled(true);
+        for (final String blockedCommand : this.newbieValues.getBlockedCommands()) {
+            if (!this.isBlocked(enteredCommand, blockedCommand)) {
                 return;
             }
+
+            this.sendMessage(player, time);
+
+            if (this.newbieValues.isDenySoundEnabled()) {
+                this.playSound(player);
+            }
+
+            event.setCancelled(true);
+            return;
         }
+    }
+
+    private void sendMessage(final Player player, final long time) {
+        final String restTime = Utils.getTime((int) (this.newbieValues.getRequiredTime() - time));
+        final String denyMessage = this.newbieValues.getDenyMessage().replace("{time}", restTime);
+        player.sendMessage(denyMessage);
+    }
+
+    private void playSound(final Player player) {
+        final Location playerLocation = player.getLocation();
+        final Sound denySound = this.newbieValues.getDenySound();
+        final float denySoundVolume = this.newbieValues.getDenySoundVolume();
+        final float denySoundPitch = this.newbieValues.getDenySoundPitch();
+        player.playSound(playerLocation, denySound, denySoundVolume, denySoundPitch);
     }
 
     private boolean isBlocked(final String command, final String cmd) {

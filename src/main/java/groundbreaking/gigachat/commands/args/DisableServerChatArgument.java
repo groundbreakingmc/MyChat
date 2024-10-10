@@ -12,7 +12,7 @@ public final class DisableServerChatArgument extends ArgsConstructor {
     private final Messages messages;
 
     @Getter
-    private static boolean chatDisabled;
+    private static boolean chatDisabled = false;
 
     public DisableServerChatArgument(final GigaChat plugin, String name, String permission) {
         super(name, permission);
@@ -22,12 +22,12 @@ public final class DisableServerChatArgument extends ArgsConstructor {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull String[] args) {
 
-        if (chatDisabled) {
-            sender.sendMessage(messages.getServerChatEnabled());
-            chatDisabled = false;
+        if (this.chatDisabled) {
+            sender.sendMessage(this.messages.getServerChatEnabled());
+            this.chatDisabled = false;
         } else {
-            sender.sendMessage(messages.getServerChatDisabled());
-            chatDisabled = true;
+            sender.sendMessage(this.messages.getServerChatDisabled());
+            this.chatDisabled = true;
         }
 
         return true;

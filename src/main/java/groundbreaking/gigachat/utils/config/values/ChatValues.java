@@ -1,9 +1,9 @@
 package groundbreaking.gigachat.utils.config.values;
 
 import groundbreaking.gigachat.GigaChat;
-import groundbreaking.gigachat.utils.chatsColorizer.AbstractColorizer;
-import groundbreaking.gigachat.utils.chatsColorizer.ChatColorizer;
-import groundbreaking.gigachat.utils.colorizer.IColorizer;
+import groundbreaking.gigachat.utils.colorizer.basic.IColorizer;
+import groundbreaking.gigachat.utils.colorizer.messages.AbstractColorizer;
+import groundbreaking.gigachat.utils.colorizer.messages.ChatColorizer;
 import groundbreaking.gigachat.utils.config.ConfigLoader;
 import lombok.Getter;
 import org.bukkit.configuration.ConfigurationSection;
@@ -30,7 +30,14 @@ public final class ChatValues {
     private char globalSymbol;
 
     @Getter
-    private boolean noOneHearEnabled, noOneHearHideHidden, noOneHearHideVanished, noOneHearHideSpectators, isGlobalForce;
+    private boolean
+            noOneHearEnabled,
+            noOneHearHideHidden,
+            noOneHearHideVanished,
+            noOneHearHideSpectators;
+
+    @Getter
+    private boolean isGlobalForce;
 
     @Getter
     private final Map<String, String>
@@ -59,118 +66,125 @@ public final class ChatValues {
             hoverText, hoverAction, hoverValue,
             adminHoverText, adminHoverAction, adminHoverValue;
 
-    public ChatValues(GigaChat plugin) {
+    public ChatValues(final GigaChat plugin) {
         this.plugin = plugin;
-        chatsColorizer = new ChatColorizer(plugin);
+        this.chatsColorizer = new ChatColorizer(plugin);
     }
 
     public void setValues() {
-        final FileConfiguration config = new ConfigLoader(plugin).loadAndGet("chats", 1.0);
+        final FileConfiguration config = new ConfigLoader(this.plugin).loadAndGet("chats", 1.0);
 
-
-        setupLocal(config);
-        setupGlobal(config);
-        setupSettings(config);
-        setupHover(config);
-        setupAdminHover(config);
+        this.setupLocal(config);
+        this.setupGlobal(config);
+        this.setupSettings(config);
+        this.setupHover(config);
+        this.setupAdminHover(config);
     }
 
     private void setupSettings(final FileConfiguration config) {
         final ConfigurationSection settings = config.getConfigurationSection("settings");
         if (settings != null) {
             final String priority = settings.getString("listener-priority").toUpperCase(Locale.ENGLISH);
+<<<<<<< Updated upstream
             setupPriority(priority);
             formatsColorizer = plugin.getColorizer(config, "settings.serializer-for-formats");
+=======
+            this.setupPriority(priority);
+
+            this.formatsColorizer = plugin.getColorizer(config, "settings.use-minimessage-for-formats");
+>>>>>>> Stashed changes
         }
         else {
-            plugin.getMyLogger().warning("Failed to load section \"settings\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
-            plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
+            this.plugin.getMyLogger().warning("Failed to load section \"settings\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
+            this.plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
         }
     }
 
     private void setupLocal(final FileConfiguration config) {
         final ConfigurationSection local = config.getConfigurationSection("local");
         if (local != null) {
-            localFormat = local.getString("format");
-            localSpyFormat = local.getString("spy-format");
-            localDistance = local.getInt("distance");
-            localCooldown = local.getInt("cooldown");
-            noOneHearEnabled = local.getBoolean("no-one-hear-you.enable");
-            noOneHearHideHidden = local.getBoolean("no-one-hear-you.hide-hidden");
-            noOneHearHideVanished = local.getBoolean("no-one-hear-you.hide-vanished");
-            noOneHearHideSpectators = local.getBoolean("no-one-hear-you.hide-spectators");
+            this.localFormat = local.getString("format");
+            this.localSpyFormat = local.getString("spy-format");
+            this.localDistance = local.getInt("distance");
+            this.localCooldown = local.getInt("cooldown");
+            this.noOneHearEnabled = local.getBoolean("no-one-hear-you.enable");
+            this.noOneHearHideHidden = local.getBoolean("no-one-hear-you.hide-hidden");
+            this.noOneHearHideVanished = local.getBoolean("no-one-hear-you.hide-vanished");
+            this.noOneHearHideSpectators = local.getBoolean("no-one-hear-you.hide-spectators");
+
             final ConfigurationSection groupsColors = local.getConfigurationSection("groups-colors");
             if (groupsColors != null) {
-                localGroupsColors.clear();
+                this.localGroupsColors.clear();
                 for (String key : groupsColors.getKeys(false)) {
-                    localGroupsColors.put(key, groupsColors.getString(key));
+                    this.localGroupsColors.put(key, groupsColors.getString(key));
                 }
             }
             else {
-                plugin.getMyLogger().warning("Failed to load section \"local.groups-colors\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
-                plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
+                this.plugin.getMyLogger().warning("Failed to load section \"local.groups-colors\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
+                this.plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
             }
         }
         else {
-            plugin.getMyLogger().warning("Failed to load section \"local\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
-            plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
+            this.plugin.getMyLogger().warning("Failed to load section \"local\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
+            this.plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
         }
     }
 
     private void setupGlobal(final FileConfiguration config) {
         final ConfigurationSection global = config.getConfigurationSection("global");
         if (global != null) {
-            globalFormat = global.getString("format");
-            globalSymbol = global.getString("symbol").charAt(0);
-            isGlobalForce = global.getBoolean("force");
-            globalCooldown = global.getInt("cooldown");
+            this.globalFormat = global.getString("format");
+            this.globalSymbol = global.getString("symbol").charAt(0);
+            this.isGlobalForce = global.getBoolean("force");
+            this.globalCooldown = global.getInt("cooldown");
+
             final ConfigurationSection groupsColors = global.getConfigurationSection("groups-colors");
             if (groupsColors != null) {
-                globalGroupsColors.clear();
+                this.globalGroupsColors.clear();
                 for (String key : groupsColors.getKeys(false)) {
-                    globalGroupsColors.put(key, groupsColors.getString(key));
+                    this.globalGroupsColors.put(key, groupsColors.getString(key));
                 }
             }
             else {
-                plugin.getMyLogger().warning("Failed to load section \"local.groups-colors\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
-                plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
+                this.plugin.getMyLogger().warning("Failed to load section \"local.groups-colors\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
+                this.plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
             }
         }
         else {
-            plugin.getMyLogger().warning("Failed to load section \"global\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
-            plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
+            this.plugin.getMyLogger().warning("Failed to load section \"global\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
+            this.plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
         }
     }
 
     private void setupHover(final FileConfiguration config) {
         final ConfigurationSection hover = config.getConfigurationSection("hover");
         if (hover != null) {
-            isHoverEnabled = hover.getBoolean("enable");
-            hoverAction = hover.getString("click-action");
-            hoverValue = hover.getString("click-value");
-            hoverText = hover.getString("text");
+            this.isHoverEnabled = hover.getBoolean("enable");
+            this.hoverAction = hover.getString("click-action");
+            this.hoverValue = hover.getString("click-value");
+            this.hoverText = hover.getString("text");
         }
         else {
-            plugin.getMyLogger().warning("Failed to load section \"hover\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
-            plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
+            this.plugin.getMyLogger().warning("Failed to load section \"hover\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
+            this.plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
         }
     }
 
     private void setupAdminHover(final FileConfiguration config) {
         final ConfigurationSection hover = config.getConfigurationSection("admin-hover");
         if (hover != null) {
-            isAdminHoverEnabled = hover.getBoolean("enable");
-            adminHoverAction = hover.getString("click-action");
-            adminHoverValue = hover.getString("click-value");
-            adminHoverText = hover.getString("text");
+            this.isAdminHoverEnabled = hover.getBoolean("enable");
+            this.adminHoverAction = hover.getString("click-action");
+            this.adminHoverValue = hover.getString("click-value");
+            this.adminHoverText = hover.getString("text");
         }
         else {
-            plugin.getMyLogger().warning("Failed to load section \"hover\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
-            plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
+            this.plugin.getMyLogger().warning("Failed to load section \"hover\" from file \"chats.yml\". Please check your configuration file, or delete it and restart your server!");
+            this.plugin.getMyLogger().warning("If you think this is a plugin error, leave a issue on the https://github.com/grounbreakingmc/GigaChat/issues");
         }
     }
 
-    private void setupPriority(final String priority) {
+    private void setupPriority(final String priority) { // todo remake for unregistration of events
         switch (priority) {
             case "LOWEST" -> {
                 isListenerPriorityLowest = true;

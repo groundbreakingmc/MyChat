@@ -9,12 +9,12 @@ public final class CMIChecker implements IVanishChecker {
     private final CMI instance;
 
     public CMIChecker() {
-        instance = CMI.getInstance();
+        this.instance = CMI.getInstance();
     }
 
     @Override
     public boolean isVanished(final Player player) {
-        final CMIUser user = instance.getPlayerManager().getUser(player);
+        final CMIUser user = this.instance.getPlayerManager().getUser(player);
         return user.isCMIVanished();
     }
 }

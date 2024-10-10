@@ -1,14 +1,14 @@
 package groundbreaking.gigachat.commands.privateMessages;
 
 import groundbreaking.gigachat.GigaChat;
-import groundbreaking.gigachat.collections.Ignore;
-import groundbreaking.gigachat.collections.Reply;
-import groundbreaking.gigachat.collections.SocialSpy;
+import groundbreaking.gigachat.collections.*;
 import groundbreaking.gigachat.utils.Utils;
 import groundbreaking.gigachat.utils.config.values.Messages;
 import groundbreaking.gigachat.utils.config.values.PrivateMessagesValues;
 import groundbreaking.gigachat.utils.vanish.IVanishChecker;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +24,7 @@ public final class ReplyCommandExecutor implements CommandExecutor, TabCompleter
     private final Messages messages;
     private final IVanishChecker vanishChecker;
     private final ConsoleCommandSender consoleSender;
+    private final Cooldowns cooldowns;
 
     private final String[] placeholders = { "{from-prefix}", "{from-name}", "{from-suffix}", "{to-prefix}", "{to-name}", "{to-suffix}" };
 
@@ -33,83 +34,95 @@ public final class ReplyCommandExecutor implements CommandExecutor, TabCompleter
         this.messages = plugin.getMessages();
         this.vanishChecker = plugin.getVanishChecker();
         this.consoleSender = plugin.getServer().getConsoleSender();
+        this.cooldowns = plugin.getCooldowns();
     }
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
 
+        if (!(sender instanceof Player playerSender)) {
+            sender.sendMessage(this.messages.getPlayerOnly());
+            return true;
+        }
+
         if (!sender.hasPermission("gigachat.command.reply")) {
-            sender.sendMessage(messages.getNoPermission());
+            sender.sendMessage(this.messages.getNoPermission());
             return true;
         }
 
         if (args.length < 1) {
-            sender.sendMessage(messages.getReplyUsageError());
+            sender.sendMessage(this.messages.getReplyUsageError());
             return true;
         }
 
         final String senderName = sender.getName();
+        if (this.hasCooldown(playerSender, senderName)) {
+            this.sendMessageHasCooldown(playerSender, senderName);
+            return true;
+        }
+
         final String recipientName = Reply.getRecipientName(senderName);
 
         if (recipientName == null) {
-            sender.sendMessage(messages.getNobodyToAnswer());
+            sender.sendMessage(this.messages.getNobodyToAnswer());
             return true;
         }
 
         final Player recipient = Bukkit.getPlayer(recipientName);
 
-        final boolean isPlayerSender = sender instanceof Player;
-        if (recipient == null || (isPlayerSender && !((Player) sender).canSee(recipient)) || vanishChecker.isVanished(recipient)) {
-            sender.sendMessage(messages.getPlayerNotFound());
+        if (recipient == null || !playerSender.canSee(recipient) || this.vanishChecker.isVanished(recipient)) {
+            sender.sendMessage(this.messages.getPlayerNotFound());
             return true;
         }
 
-        if (isPlayerSender && !sender.hasPermission("gigachat.bypass.ignore")) {
+        if (!sender.hasPermission("gigachat.bypass.ignore.private")) {
             if (isIgnored(recipientName, senderName)) {
-                sender.sendMessage(messages.getRecipientIgnoresSender());
+                sender.sendMessage(this.messages.getRecipientIgnoresSender());
                 return true;
             }
 
             if (isIgnored(senderName, recipientName)) {
-                sender.sendMessage(messages.getSenderIgnoresRecipient());
+                sender.sendMessage(this.messages.getSenderIgnoresRecipient());
                 return true;
             }
         }
 
-        String senderPrefix = "", senderSuffix = "";
-        if (isPlayerSender) {
-            final Player playerSender = (Player) sender;
-            senderPrefix = getPrefix(playerSender);
-            senderSuffix = getSuffix(playerSender);
-        }
-        final String recipientPrefix = getPrefix(recipient), recipientSuffix = getSuffix(recipient);
+
+        final String senderPrefix = this.getPrefix(playerSender);
+        final String senderSuffix = this.getSuffix(playerSender);
+        final String recipientPrefix = this.getPrefix(recipient), recipientSuffix = getSuffix(recipient);
 
         final String[] replacementList = { senderPrefix, senderName, senderSuffix, recipientPrefix, recipientName, recipientSuffix};
         final String formattedMessageForSender, formattedMessageForRecipient, formattedMessageForConsole, formattedMessageForSocialSpy;
 
-        if (isPlayerSender) {
-            final Player playerSender = (Player) sender;
-            final String message = getMessage(playerSender, args);
-            formattedMessageForSender = getFormattedMessage(playerSender, message, pmValues.getSenderFormat(), replacementList);
-            formattedMessageForRecipient = getFormattedMessage(playerSender, message, pmValues.getRecipientFormat(),replacementList);
-            formattedMessageForConsole = getFormattedMessage(playerSender, message, pmValues.getConsoleFormat(),replacementList);
-            formattedMessageForSocialSpy = getFormattedMessage(playerSender, message, pmValues.getSocialSpyFormat(),replacementList);
+        final String message = this.getMessage(playerSender, args);
+        formattedMessageForSender = this.getFormattedMessage(playerSender, message, this.pmValues.getSenderFormat(), replacementList);
+        formattedMessageForRecipient = this.getFormattedMessage(playerSender, message, this.pmValues.getRecipientFormat(),replacementList);
+        formattedMessageForConsole = this.getFormattedMessage(playerSender, message, this.pmValues.getConsoleFormat(),replacementList);
+        formattedMessageForSocialSpy = this.getFormattedMessage(playerSender, message, this.pmValues.getSocialSpyFormat(),replacementList);
 
-            Reply.add(recipientName, senderName);
-            processLogs(formattedMessageForConsole);
-            SocialSpy.sendAll(playerSender, recipient, formattedMessageForSocialSpy);
-        } else {
-            final String message = getMessage(args);
-            formattedMessageForSender = getFormattedMessage(message, pmValues.getSenderFormat(), replacementList);
-            formattedMessageForRecipient = getFormattedMessage(message, pmValues.getRecipientFormat(),replacementList);
-        }
+        Reply.add(recipientName, senderName);
+        this.processLogs(formattedMessageForConsole);
+        SocialSpy.sendAll(playerSender, recipient, formattedMessageForSocialSpy);
 
         sender.sendMessage(formattedMessageForSender);
         recipient.sendMessage(formattedMessageForRecipient);
 
-        playSound(recipient);
+        this.playSound(recipient);
 
         return true;
+    }
+
+    private boolean hasCooldown(final Player playerSender, final String senderName) {
+        return this.cooldowns.hasCooldown(playerSender, senderName, "gigachat.bypass.cooldown.socialspy", this.cooldowns.getPrivateCooldowns());
+    }
+
+    private void sendMessageHasCooldown(final Player playerSender, final String senderName) {
+        final long timeLeftInMillis = this.cooldowns.getPrivateCooldowns().get(senderName) - System.currentTimeMillis();
+        final int result = (int) (this.pmValues.getPmCooldown() / 1000 + timeLeftInMillis / 1000);
+        final String restTime = Utils.getTime(result);
+        final String message = this.messages.getCommandCooldownMessage().replace("{time}", restTime);
+        playerSender.sendMessage(message);
     }
 
     private boolean isIgnored(final String ignoredName, final String ignoringName) {
@@ -117,47 +130,40 @@ public final class ReplyCommandExecutor implements CommandExecutor, TabCompleter
     }
 
     private String getPrefix(final Player player) {
-        return plugin.getChat().getPlayerPrefix(player);
+        return this.plugin.getChat().getPlayerPrefix(player);
     }
 
     private String getSuffix(final Player player) {
-        return plugin.getChat().getPlayerSuffix(player);
+        return this.plugin.getChat().getPlayerSuffix(player);
     }
 
     public String getFormattedMessage(final Player player, final String message, final String format, final String[] replacementList) {
-        final String formatted = pmValues.getMessagesColorizer().colorize(
-                Utils.replacePlaceholders(player,
-                        Utils.replaceEach(format, placeholders, replacementList)
+        final String formatted = this.pmValues.getMessagesColorizer().colorize(
+                Utils.replacePlaceholders(
+                        player,
+                        Utils.replaceEach(format, this.placeholders, replacementList)
                 )
         );
 
         return formatted.replace("{message}", message).replace("%", "%%");
     }
 
-    public String getFormattedMessage(final String message, final String format, final String[] replacementList) {
-        final String formatted = pmValues.getMessagesColorizer().colorize(
-                Utils.replaceEach(format, placeholders, replacementList)
-        );
-
-        return formatted.replace("{message}", message).replace("%", "%%");
-    }
-
     private String getMessage(final Player sender, final String[] args) {
-        return pmValues.getMessagesColorizer().colorize(sender, String.join(" ", args).trim() );
-    }
-
-    private String getMessage(final String[] args) {
-        return pmValues.getMessagesColorizer().colorize( String.join(" ", args).trim() );
+        return this.pmValues.getMessagesColorizer().colorize(sender, String.join(" ", args).trim() );
     }
 
     private void playSound(final Player recipient) {
-        if (pmValues.isSoundEnabled()) {
-            recipient.playSound(recipient.getLocation(), pmValues.getSound(), pmValues.getSoundVolume(), pmValues.getSoundPitch());
+        final Sound sound = PmSounds.getSound(recipient.getName());
+        if (this.pmValues.isSoundEnabled()) {
+            final Location recipientLocation = recipient.getLocation();
+            final float volume = this.pmValues.getSoundVolume();
+            final float pitch = this.pmValues.getSoundPitch();
+            recipient.playSound(recipientLocation, sound, volume, pitch);
         }
     }
 
     private void processLogs(final String formattedMessage) {
-        consoleSender.sendMessage(formattedMessage);
+        this.consoleSender.sendMessage(formattedMessage);
     }
 
     @Override
